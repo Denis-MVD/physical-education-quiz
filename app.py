@@ -56,7 +56,7 @@ def set_png_as_page_bg(bin_file):
         """
         st.markdown(page_bg_img, unsafe_allow_html=True)
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
-st.set_page_config(page_title="НВП: Контроль", layout="centered", page_icon="🎖️")
+st.set_page_config(page_title="ФКС: Контроль", layout="centered", page_icon="⚽")
 set_png_as_page_bg('background.png')
 
 # --- 2. КОНСТАНТЫ ---
@@ -230,7 +230,7 @@ if st.session_state.test_state == "login":
     
     st.write("### Выберите класс:")
     c1, col_empty, c2 = st.columns([2, 0.5, 2])
-    if c1.button("10 КЛАСС 📘", use_container_width=True):
+    if c1.button("Тесты 📘", use_container_width=True):
         st.session_state.selected_class = "10 класс"
     if c2.button("11 КЛАСС 📕", use_container_width=True):
         st.session_state.selected_class = "11 класс"
