@@ -66,7 +66,7 @@ TEST_DURATION_MIN = 15      # Таймер на 15 минут
 QUESTIONS_LIMIT = 15        # Выводить по 15 вопросов
 # --- 3. БАЗА ДАННЫХ ---
 DATABASE = {
-    "Тест": {
+    "10 класс": {
         "Тема 1: Физическая культура, спорт и здоровый образ жизни": [
             ("Сколько игроков одновременно находится на площадке от одной команды в волейболе?", ["5", "6", "7", "11"], "6"),
             ("Какая стандартная длина беговой дорожки на стадионе?", ["200 м", "300 м", "400 м", "500 м"], "400 м"),
@@ -230,7 +230,7 @@ if st.session_state.test_state == "login":
     
     st.write("### Выберите класс:")
     c1, col_empty, c2 = st.columns([2, 0.5, 2])
-    if c1.button("Тесты 📘", use_container_width=True):
+    if c1.button("10 КЛАСС 📘", use_container_width=True):
         st.session_state.selected_class = "10 класс"
     if c2.button("11 КЛАСС 📕", use_container_width=True):
         st.session_state.selected_class = "11 класс"
