@@ -1,23 +1,21 @@
-import streamlit as st
-import random
-from datetime import datetime, timedelta
-import pandas as pd
-import os
 import base64
-from streamlit_autorefresh import st_autorefresh
+import os
+import streamlit as st
+
 
 # --- ФУНКЦИИ ДЛЯ РАБОТЫ С ФОНОМ ---
 def get_base64_of_bin_file(bin_file):
     if os.path.exists(bin_file):
-        with open(bin_file, 'rb') as f:
+        with open(bin_file, "rb") as f:
             data = f.read()
         return base64.b64encode(data).decode()
     return None
 
+
 def set_png_as_page_bg(bin_file):
     bin_str = get_base64_of_bin_file(bin_file)
     if bin_str:
-        page_bg_img = f'''
+        page_bg_img = f"""
         <style>
         /* Основной фон всей страницы */
         .stApp {{
@@ -26,51 +24,34 @@ def set_png_as_page_bg(bin_file):
             background-position: center;
             background-attachment: fixed;
         }}
-        
-        /* Скрываем системные элементы Streamlit */
+
+        /* Скрываем стандартный шапку и футер Streamlit */
         #MainMenu {{visibility: hidden;}}
         footer {{visibility: hidden;}}
         header {{visibility: hidden;}}
-        
-        /* 1. СТИЛЬ ДЛЯ БЛОКОВ С КОНТЕНТОМ (Вопросы, кнопки, поля) */
-        /* Добавлены .fixed-header и .stMarkdown, чтобы важные элементы не исчезали */
-        div[data-testid="stVerticalBlock"] > div:has(h1, h2, h3, h4, .stTextInput, .stButton, .stExpander, .stRadio, .stInfo, .stSuccess, .stError, .fixed-header, .stMarkdown) {{
-            background-color: rgba(61, 68, 50, 0.85) !important;
-            padding: 25px; 
-            border-radius: 15px; 
-            border-left: 10px solid #2f3526 !important;
-            box-shadow: 10px 10px 25px rgba(0,0,0,0.6);
-            margin-bottom: 20px;
-            display: block !important;
+
+        /* Стиль основной прозрачной карточки-контейнера для контента */
+        .stMainBlockContainer {{
+            background-color: rgba(61, 68, 50, 0.88) !important;
+            padding: 30px !important;
+            border-radius: 15px !important;
+            border-left: 8px solid #2f3526 !important;
+            box-shadow: 10px 10px 25px rgba(0, 0, 0, 0.6) !important;
+            margin-top: 20px !important;
+            margin-bottom: 20px !important;
         }}
 
-        /* 2. ПОЛНОЕ СКРЫТИЕ ПУСТЫХ КОНТЕЙНЕРОВ */
-        /* Находим блоки без контента и принудительно их убираем */
-        div[data-testid="stVerticalBlock"] > div:not(:has(h1, h2, h3, h4, .stTextInput, .stButton, .stExpander, .stRadio, .stInfo, .stSuccess, .stError, .fixed-header, .stMarkdown, p, span)) {{
-            background: none !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 !important;
-            height: 0px !important;
-            display: none !important;
-        }}
-
-        /* 3. СПЕЦИАЛЬНОЕ ПРАВИЛО ДЛЯ ПАНЕЛИ ТАЙМЕРА */
+        /* Кастомный стиль для закрепленной панели таймера */
         .fixed-header {{
             background-color: rgba(45, 53, 38, 0.98) !important;
             border-bottom: 4px solid #556b2f !important;
-            border-left: none !important; /* Убираем левую полосу для верхней панели */
-        }}
-
-        /* Устранение стандартных межстрочных интервалов Streamlit */
-        [data-testid="stVerticalBlock"] {{
-            gap: 0rem !important;
+            padding: 15px !important;
+            border-radius: 10px !important;
+            margin-bottom: 15px !important;
         }}
         </style>
-        '''
+        """
         st.markdown(page_bg_img, unsafe_allow_html=True)
-
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(page_title="НВП: Контроль", layout="centered", page_icon="🎖️")
 set_png_as_page_bg('background.png')
