@@ -28,26 +28,26 @@ def set_png_as_page_bg(bin_file):
             background-attachment: fixed;
         }}
 
-        /* Скрываем стандартный шапку и футер Streamlit */
+        /* Скрываем служебные элементы Streamlit */
         #MainMenu {{visibility: hidden;}}
         footer {{visibility: hidden;}}
         header {{visibility: hidden;}}
 
-        /* Стиль основной прозрачной карточки-контейнера для контента */
+        /* Стиль главной карточки (стильный нейтральный графит) */
         .stMainBlockContainer {{
-            background-color: rgba(61, 68, 50, 0.88) !important;
+            background-color: rgba(25, 27, 31, 0.92) !important;
             padding: 30px !important;
-            border-radius: 15px !important;
-            border-left: 8px solid #2f3526 !important;
-            box-shadow: 10px 10px 25px rgba(0, 0, 0, 0.6) !important;
+            border-radius: 16px !important;
+            border-left: 6px solid #4a5568 !important;
+            box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.7) !important;
             margin-top: 20px !important;
             margin-bottom: 20px !important;
         }}
 
-        /* Кастомный стиль для закрепленной панели таймера */
+        /* Кастомный стиль панели таймера */
         .fixed-header {{
-            background-color: rgba(45, 53, 38, 0.98) !important;
-            border-bottom: 4px solid #556b2f !important;
+            background-color: rgba(33, 37, 43, 0.98) !important;
+            border-bottom: 3px solid #64748b !important;
             padding: 15px !important;
             border-radius: 10px !important;
             margin-bottom: 15px !important;
