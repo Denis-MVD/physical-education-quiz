@@ -1,7 +1,10 @@
 import base64
+from datetime import datetime, timedelta
 import os
+import random
+import pandas as pd
 import streamlit as st
-
+from streamlit_autorefresh import st_autorefresh
 
 # --- ФУНКЦИИ ДЛЯ РАБОТЫ С ФОНОМ ---
 def get_base64_of_bin_file(bin_file):
