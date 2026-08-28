@@ -55,6 +55,8 @@ def set_png_as_page_bg(bin_file):
         </style>
         """
         st.markdown(page_bg_img, unsafe_allow_html=True)
+
+
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(page_title="ФКС: Контроль", layout="centered", page_icon="⚽")
 set_png_as_page_bg('background.png')
@@ -64,7 +66,7 @@ TEACHER_PIN = "1234"
 RESULTS_FILE = "detailed_results.csv"
 TEST_DURATION_MIN = 15      # Таймер на 15 минут
 QUESTIONS_LIMIT = 15        # Выводить по 15 вопросов
-# --- 3. БАЗА ДАННЫХ ---
+
 DATABASE = {
     "10 класс": {
         "Тема 1: Физическая культура, спорт и здоровый образ жизни": [
