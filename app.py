@@ -7,6 +7,13 @@ import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
 # --- ФУНКЦИИ ДЛЯ РАБОТЫ С ФОНОМ ---
+def get_base64_of_bin_file(bin_file):
+    if os.path.exists(bin_file):
+        with open(bin_file, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    return None
+
 def set_png_as_page_bg(bin_file):
     bin_str = get_base64_of_bin_file(bin_file)
     if bin_str:
