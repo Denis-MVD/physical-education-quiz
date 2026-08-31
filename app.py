@@ -1,5 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import pandas as pd
+import io
 
 # --- 1. НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
@@ -12,6 +14,8 @@ st.set_page_config(
 # --- 2. ИНИЦИАЛИЗА SESSION STATE ---
 if "app_mode" not in st.session_state:
     st.session_state.app_mode = "guide"
+if "test_results" not in st.session_state:
+    st.session_state.test_results = []
 
 # --- 3. БОКОВОЕ МЕНЮ (НАВИГАЦИЯ) ---
 st.sidebar.title("📌 Разделы платформы")
@@ -20,6 +24,7 @@ st.sidebar.markdown("---")
 menu_options = [
     "📚 Справочник", 
     "📝 Контрольное тестирование", 
+    "🎟️ Генератор экзаменационных билетов",
     "🎮 Игра Sonic Runner", 
     "📊 Журнал результатов"
 ]
@@ -27,11 +32,11 @@ menu_options = [
 mode_map = {
     "📚 Справочник": "guide",
     "📝 Контрольное тестирование": "testing",
+    "🎟️ Генератор экзаменационных билетов": "tickets",
     "🎮 Игра Sonic Runner": "game",
     "📊 Журнал результатов": "results"
 }
 
-# Определение текущего индекса для корректной работы радио-кнопки
 current_index = list(mode_map.values()).index(st.session_state.app_mode)
 selected_menu = st.sidebar.radio("Перейти к разделу:", menu_options, index=current_index)
 st.session_state.app_mode = mode_map[selected_menu]
@@ -42,37 +47,51 @@ st.markdown("<p style='text-align: center; color: #94a3b8;'>Единый уче�
 st.markdown("---")
 
 # ==========================================
-# РАЗДЕЛ 1: СПРАВОЧНИК
+# РАЗДЕЛ 1: ТЕОРЕТИЧЕСКИЙ СПРАВОЧНИК
 # ==========================================
 if st.session_state.app_mode == "guide":
     st.subheader("📚 Теоретический справочник по Физической Культуре")
     
-    tab1, tab2, tab3 = st.tabs(["🏀 Баскетбол", "⚽ Футбол", "🏐 Волейбол"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🏀 Баскетбол", "⚽ Футбол", "🏐 Волейбол", "🏃 Лёгкая атлетика & Гимнастика"])
     
     with tab1:
-        st.markdown("**Основные правила баскетбола:**")
-        st.write("* На площадке одновременно находятся по 5 игроков от каждой команды.")
-        st.write("* Игра состоит из 4 четвертей по 10 минут (по правилам ФИБА).")
-        st.write("* За попадание с игры начисляется 2 очка, из-за дуги — 3 очка, с штрафного — 1 очко.")
+        st.markdown("**Баскетбол:**")
+        st.write("* **Состав команды:** 5 игроков на площадке.")
+        st.write("* **Размеры площадки:** 28 × 15 метров.")
+        st.write("* **Начисление очков:** 1 очко — штрафной бросок, 2 очка — бросок из средней/ближней зоны, 3 очка — из-за дуги (6.75 м).")
+        st.write("* **Правило ведения:** Нельзя делать более 2 шагов без ведения мяча (пробежка).")
 
     with tab2:
-        st.markdown("**Основные правила футбола:**")
-        st.write("* В команде 11 игроков, включая вратаря.")
-        st.write("* Ширина ворота составляет **7.32 м**, высота — **2.44 м**.")
-        st.write("* Игра состоит из двух таймов по 45 минут.")
+        st.markdown("**Футбол:**")
+        st.write("* **Состав команды:** 11 игроков (10 полевых + 1 вратарь).")
+        st.write("* **Ворота:** ширина — **7.32 м**, высота — **2.44 м**.")
+        st.write("* **Продолжительность матча:** 2 тайма по 45 минут с 15-минутным перерывом.")
 
     with tab3:
-        st.markdown("**Основные правила волейбола:**")
-        st.write("* В команде 6 игроков.")
-        st.write("* Команде разрешено не более 3 касаний мяча для перевода его на сторону соперника.")
-        st.write("* Партия продолжается до 25 очков.")
+        st.markdown("**Волейбол:**")
+        st.write("* **Состав команды:** 6 игроков на площадке.")
+        st.write("* **Касания:** Не более 3 касаний команды для перевода мяча через сетку.")
+        st.write("* **Счет:** Игра ведется до победы в 3 партиях, каждая партия — до 25 очков (тай-брейк — до 15).")
+
+    with tab4:
+        st.markdown("**Лёгкая атлетика и Гимнастика:**")
+        st.write("* **Бег на короткие дистанции (100м, 200м, 400м):** выполняется с **низкого старта** с использованием стартовых колодок.")
+        st.write("* **Бег на средние и длинные дистанции:** выполняется с **высокого старта**.")
+        st.write("* **Гимнастика:** Для предотвращения соскальзывания рук со снарядов (перекладина, брусья, кольца) используется **магнезия**.")
 
 # ==========================================
-# РАЗДЕЛ 2: ОБЫЧНОЕ ТЕСТИРОВАНИЕ
+# РАЗДЕЛ 2: КОНТРОЛЬНОЕ ТЕСТИРОВАНИЕ
 # ==========================================
 elif st.session_state.app_mode == "testing":
     st.subheader("📝 Контрольное тестирование")
-    st.write("Выберите правильные варианты и нажмите кнопку для проверки результатов.")
+    
+    col_student1, col_student2 = st.columns(2)
+    with col_student1:
+        student_name = st.text_input("ФИО Ученика:", value="Ученик 1")
+    with col_student2:
+        student_class = st.selectbox("Класс:", ["5 класс", "6 класс", "7 класс", "8 класс", "9 класс", "10 класс", "11 класс"])
+
+    st.markdown("---")
 
     questions_data = [
         {"q": "1. Сколько игроков от одной команды находится на площадке в баскетболе?", "options": ["5 игроков", "6 игроков", "11 игроков", "4 игрока"], "ans": 0},
@@ -91,10 +110,57 @@ elif st.session_state.app_mode == "testing":
         submitted = st.form_submit_button("✅ Сдать тест")
         if submitted:
             score = sum([1 for i, q in enumerate(questions_data) if user_answers[i] == q["ans"]])
-            st.success(f"Вы ответили правильно на {score} из {len(questions_data)} вопросов!")
+            total = len(questions_data)
+            percent = int((score / total) * 100)
+            
+            st.success(f"Тест сдан! Результат: {score} из {total} ({percent}%)")
+            
+            # Сохранение результатов
+            st.session_state.test_results.append({
+                "ФИО": student_name,
+                "Класс": student_class,
+                "Баллы": f"{score}/{total}",
+                "Процент": f"{percent}%",
+                "Режим": "Тестирование"
+            })
 
 # ==========================================
-# РАЗДЕЛ 3: 2D-ИГРА SONIC RUNNER
+# РАЗДЕЛ 3: ГЕНЕРАТОР ЭКЗАМЕНАЦИОННЫХ БИЛЕТОВ
+# ==========================================
+elif st.session_state.app_mode == "tickets":
+    st.subheader("🎟️ Генератор экзаменационных билетов")
+    st.write("Формирование билетов с теоретическим вопросом и практическим упражнением.")
+
+    theory_questions = [
+        "Правила техники безопасности при проведении занятий по легкой атлетике.",
+        "Правила игры в баскетбол: состав команды, очки, нарушения.",
+        "Техника выполнения бега на короткие дистанции (низкий старт).",
+        "Оказание первой помощи при растяжениях и ушибах во время занятий ФК.",
+        "Олимпийские игры: история возникновения и современность."
+    ]
+
+    practice_tasks = [
+        "Выполнить челночный бег 3 х 10 метров на время.",
+        "Выполнить прыжок в длину с места (3 попытки, фиксируется лучший результат).",
+        "Выполнить сгибание и разгибание рук в упоре лежа (отжимания) за 30 секунд.",
+        "Выполнить ведение баскетбольного мяча «змейкой» с последующим броском в кольцо.",
+        "Выполнить передачу волейбольного мяча двумя руками сверху над собой (20 раз)."
+    ]
+
+    ticket_count = st.slider("Количество формируемых билетов:", min_value=1, max_value=10, value=5)
+
+    if st.button("🎲 Сгенерировать билеты"):
+        st.markdown("### 📋 Экзаменационные билеты:")
+        for t in range(1, ticket_count + 1):
+            t_q = theory_questions[(t - 1) % len(theory_questions)]
+            p_t = practice_tasks[(t - 1) % len(practice_tasks)]
+            
+            with st.expander(f"📌 БИЛЕТ № {t}", expanded=True):
+                st.markdown(f"**Вопрос 1 (Теория):** {t_q}")
+                st.markdown(f"**Задание 2 (Практика):** {p_t}")
+
+# ==========================================
+# РАЗДЕЛ 4: 2D-ИГРА SONIC RUNNER
 # ==========================================
 elif st.session_state.app_mode == "game":
     st.markdown("<h3 style='color: #ffffff; text-align: center; margin-bottom: 15px;'>⚡ Sonic PE Quiz Runner</h3>", unsafe_allow_html=True)
@@ -271,8 +337,25 @@ elif st.session_state.app_mode == "game":
     components.html(game_code, height=500, scrolling=False)
 
 # ==========================================
-# РАЗДЕЛ 4: РЕЗУЛЬТАТЫ
+# РАЗДЕЛ 5: ЖУРНАЛ РЕЗУЛЬТАТОВ И ЭКСПОРТ EXCEL
 # ==========================================
 elif st.session_state.app_mode == "results":
     st.subheader("📊 Журнал результатов учащихся")
-    st.info("Раздел администрирования: статистика успешности и таблицы рекордов.")
+    
+    if len(st.session_state.test_results) > 0:
+        df = pd.DataFrame(st.session_state.test_results)
+        st.dataframe(df, use_container_width=True)
+
+        # Выгрузка результатов в Excel
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Результаты')
+        
+        st.download_button(
+            label="📥 Скачать журнал результатов (Excel)",
+            data=buffer.getvalue(),
+            file_name="results_pe.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    else:
+        st.info("Журнал пока пуст. Пройдите контрольное тестирование в соответствующем разделе.")
