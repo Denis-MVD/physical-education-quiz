@@ -7,18 +7,12 @@ import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
 # --- ФУНКЦИИ ДЛЯ РАБОТЫ С ФОНОМ ---
-def get_base64_of_bin_file(bin_file):
-    if os.path.exists(bin_file):
-        with open(bin_file, "rb") as f:
-            data = f.read()
-        return base64.b64encode(data).decode()
-    return None
-
 def set_png_as_page_bg(bin_file):
     bin_str = get_base64_of_bin_file(bin_file)
     if bin_str:
         page_bg_img = f"""
         <style>
+        /* 1. Общий фон страницы */
         .stApp {{
             background-image: url("data:image/png;base64,{bin_str}");
             background-size: cover;
@@ -30,23 +24,67 @@ def set_png_as_page_bg(bin_file):
         footer {{visibility: hidden;}}
         header {{visibility: hidden;}}
 
-        /* Графитовая строгая карточка */
+        /* 2. Основной контейнер-карточка */
         .stMainBlockContainer {{
-            background-color: rgba(25, 27, 31, 0.94) !important;
-            padding: 30px !important;
-            border-radius: 16px !important;
-            border-left: 6px solid #4a5568 !important;
-            box-shadow: 0px 12px 32px rgba(0, 0, 0, 0.7) !important;
-            margin-top: 20px !important;
-            margin-bottom: 20px !important;
+            background: linear-gradient(180deg, rgba(30, 34, 42, 0.95) 0%, rgba(20, 22, 27, 0.96) 100%) !important;
+            padding: 35px 30px !important;
+            border-radius: 20px !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.8), 0px 0px 15px rgba(59, 130, 246, 0.1) !important;
+            margin-top: 25px !important;
+            margin-bottom: 25px !important;
         }}
 
-        .fixed-header {{
-            background-color: rgba(33, 37, 43, 0.98) !important;
-            border-bottom: 3px solid #64748b !important;
-            padding: 15px !important;
+        /* 3. Кастомные карточки правил (Справочник) */
+        .rule-card {{
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-left: 4px solid #3b82f6;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }}
+        .rule-card:hover {{
+            background: rgba(255, 255, 255, 0.06);
+            border-left-color: #60a5fa;
+            transform: translateY(-2px);
+        }}
+        .rule-title {{
+            color: #93c5fd;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+        .rule-content {{
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }}
+
+        /* 4. Стилизация кнопок */
+        .stButton > button {{
             border-radius: 10px !important;
-            margin-bottom: 15px !important;
+            font-weight: 600 !important;
+            transition: all 0.2s ease-in-out !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }}
+        .stButton > button:hover {{
+            border-color: #60a5fa !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+        }}
+
+        /* 5. Шапка таймера */
+        .fixed-header {{
+            background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%) !important;
+            border: 1px solid #334155 !important;
+            border-bottom: 3px solid #3b82f6 !important;
+            padding: 15px !important;
+            border-radius: 12px !important;
+            margin-bottom: 20px !important;
         }}
         </style>
         """
@@ -165,20 +203,22 @@ st.markdown("---")
 # 📖 РЕЖИМ 1: СПРАВОЧНИК ПРАВИЛ
 # ==========================================
 if st.session_state.app_mode == "guide":
-    st.subheader("📚 Познавательный справочник по правилам видов спорта")
-    st.write("Нажмите на интересующий вид спорта, чтобы изучить правила:")
-
-    # Выбор вида спорта через кнопки
+    st.subheader("📚 Познавательный справочник по правилам")
+    
     sport_choice = st.radio("Выберите дисциплину:", list(RULES_DB.keys()), horizontal=True)
 
     if sport_choice:
         st.markdown(f"### Разбор правил: {sport_choice}")
         sport_data = RULES_DB[sport_choice]
         
-        # Вывод правил в виде аккордеона/вкладок
         for section_title, section_text in sport_data.items():
-            with st.expander(f"📌 {section_title}", expanded=True):
-                st.markdown(section_text)
+            formatted_text = section_text.replace('\n', '<br>')
+            st.markdown(f"""
+                <div class="rule-card">
+                    <div class="rule-title">📌 {section_title}</div>
+                    <div class="rule-content">{formatted_text}</div>
+                </div>
+            """, unsafe_allow_html=True)
 
 # ==========================================
 # 📝 РЕЖИМ 2: ТЕСТИРОВАНИЕ
