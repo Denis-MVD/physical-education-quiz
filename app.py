@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
-# --- ФУНКЦИИ ДЛЯ РАБОТЫ С ФОНОМ ---
+# --- 1. ВСПУМОГАТЕЛЬНЫЕ ФУНКЦИИ И СТИЛИЗАЦИЯ ---
 def get_base64_of_bin_file(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, "rb") as f:
@@ -14,159 +14,201 @@ def get_base64_of_bin_file(bin_file):
         return base64.b64encode(data).decode()
     return None
 
-def set_png_as_page_bg(bin_file):
+def apply_custom_design(bin_file):
     bin_str = get_base64_of_bin_file(bin_file)
-    if bin_str:
-        page_bg_img = f"""
-        <style>
-        /* 1. Общий фон страницы */
-        .stApp {{
-            background-image: url("data:image/png;base64,{bin_str}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-        }}
+    bg_style = f"background-image: url('data:image/png;base64,{bin_str}');" if bin_str else "background: #0f172a;"
 
-        #MainMenu {{visibility: hidden;}}
-        footer {{visibility: hidden;}}
-        header {{visibility: hidden;}}
+    css = f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-        /* 2. Основной контейнер-карточка */
-        .stMainBlockContainer {{
-            background: linear-gradient(180deg, rgba(30, 34, 42, 0.95) 0%, rgba(20, 22, 27, 0.96) 100%) !important;
-            padding: 35px 30px !important;
-            border-radius: 20px !important;
-            border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.8), 0px 0px 15px rgba(59, 130, 246, 0.1) !important;
-            margin-top: 25px !important;
-            margin-bottom: 25px !important;
-        }}
+    html, body, [class*="css"] {{
+        font-family: 'Inter', sans-serif;
+    }}
 
-        /* 3. Кастомные карточки правил (Справочник) */
-        .rule-card {{
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-left: 4px solid #3b82f6;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 15px;
-            transition: all 0.3s ease;
-        }}
-        .rule-card:hover {{
-            background: rgba(255, 255, 255, 0.06);
-            border-left-color: #60a5fa;
-            transform: translateY(-2px);
-        }}
-        .rule-title {{
-            color: #93c5fd;
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 8px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }}
-        .rule-content {{
-            color: #e2e8f0;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }}
+    /* 1. Общий фон страницы */
+    .stApp {{
+        {bg_style}
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }}
 
-        /* 4. Стилизация кнопок */
-        .stButton > button {{
-            border-radius: 10px !important;
-            font-weight: 600 !important;
-            transition: all 0.2s ease-in-out !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        }}
-        .stButton > button:hover {{
-            border-color: #60a5fa !important;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
-        }}
+    /* Скрытие стандартных элементов Streamlit */
+    #MainMenu, footer, header {{visibility: hidden;}}
 
-        /* 5. Шапка таймера */
-        .fixed-header {{
-            background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%) !important;
-            border: 1px solid #334155 !important;
-            border-bottom: 3px solid #3b82f6 !important;
-            padding: 15px !important;
-            border-radius: 12px !important;
-            margin-bottom: 20px !important;
-        }}
-        </style>
-        """
-        st.markdown(page_bg_img, unsafe_allow_html=True)
+    /* 2. Главная карточка-контейнер (Glassmorphism) */
+    .stMainBlockContainer {{
+        background: rgba(15, 23, 42, 0.88) !important;
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        padding: 40px 35px !important;
+        border-radius: 24px !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(59, 130, 246, 0.15) !important;
+        margin-top: 30px !important;
+        margin-bottom: 30px !important;
+    }}
 
-# --- 1. НАСТРОЙКА СТРАНИЦЫ ---
+    /* 3. Шапка учителя */
+    .teacher-badge {{
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 16px;
+        padding: 16px 20px;
+        text-align: center;
+        margin-bottom: 25px;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }}
+    .teacher-title {{
+        color: #94a3b8;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }}
+    .teacher-name {{
+        color: #ffffff;
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: linear-gradient(90deg, #ffffff 0%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }}
+
+    /* 4. Карточки справочника правил */
+    .rule-card {{
+        background: rgba(30, 41, 59, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 4px solid #3b82f6;
+        border-radius: 14px;
+        padding: 18px 22px;
+        margin-bottom: 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }}
+    .rule-card:hover {{
+        background: rgba(30, 41, 59, 0.8);
+        border-left-color: #60a5fa;
+        transform: translateX(4px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }}
+    .rule-title {{
+        color: #60a5fa;
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }}
+    .rule-content {{
+        color: #e2e8f0;
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }}
+
+    /* 5. Кастомизация кнопок Streamlit */
+    .stButton > button {{
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+        color: #f8fafc !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        padding: 12px 24px !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.3px !important;
+        transition: all 0.25s ease !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    }}
+    .stButton > button:hover {{
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+        border-color: #60a5fa !important;
+        color: #ffffff !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4) !important;
+    }}
+
+    /* 6. Кастомизация плашки таймера */
+    .timer-card {{
+        background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
+        border: 1px solid rgba(99, 102, 241, 0.4);
+        border-radius: 16px;
+        padding: 16px;
+        text-align: center;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    }}
+    .timer-text {{
+        color: #818cf8;
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin: 0;
+    }}
+    .timer-sub {{
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-top: 4px;
+    }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+# --- 2. НАСТРОЙКА СТРАНИЦЫ И СТИЛЕЙ ---
 st.set_page_config(page_title="ФКС: Обучение и Контроль", layout="centered", page_icon="⚽")
-set_png_as_page_bg('background.png')
+apply_custom_design('background.png')
 
-# --- 2. КОНСТАНТЫ ---
+# --- 3. КОНСТАНТЫ И БАЗЫ ДАННЫХ ---
 TEACHER_PIN = "1234"
 RESULTS_FILE = "detailed_results.csv"
 TEST_DURATION_MIN = 15
 QUESTIONS_LIMIT = 15
 
-# --- 3. БАЗА ДАННЫХ ПРАВИЛ (СПРАВОЧНИК) ---
 RULES_DB = {
     "🏀 Баскетбол": {
-        "Площадка и состав": "• **Размеры поля:** 28 × 15 метров.\n• **Состав команды:** 5 игроков на паркете (всего в заявке до 12).\n• **Высота кольца:** 3.05 метра.",
-        "Начисление очков": "• **1 очко:** Точный штрафной бросок.\n• **2 очка:** Бросок со средней или близкой дистанции (изнутри 3-очковой дуги).\n• **3 очка:** Бросок из-за 6.75-метровой линии (трехочковая дуга).",
-        "Ключевые правила времени": "• **24 секунды:** Время на проведение атаки командой.\n• **8 секунд:** Время на вывод мяча из своей половины поля.\n• **3 секунды:** Максимальное время нахождения игрока атаки в «краске» (штрафной зоне) соперника.\n• **5 секунд:** Время на ввод мяча из аута или выполнение штрафного.",
-        "Основные нарушения": "• **Пробежка:** Передвижение с мячом в руках без ведения (более 2 шагов).\n• **Двойное ведение:** Повторное начало ведения после того, как игрок взял мяч в две руки.\n• **Фолы:** За 5 personal фолов игрок удаляется с поля до конца матча."
+        "Площадка и состав": "• Размеры поля: <b>28 × 15 метров</b>.<br>• Состав команды: <b>5 игроков</b> на паркете.<br>• Высота кольца: <b>3.05 метра</b>.",
+        "Начисление очков": "• <b>1 очко</b> — Штрафной бросок.<br>• <b>2 очка</b> — Бросок изнутри 3-очковой дуги.<br>• <b>3 очка</b> — Бросок из-за 6.75-метровой линии.",
+        "Ключевые правила времени": "• <b>24 секунды</b> — Время на атаку.<br>• <b>8 секунд</b> — Вывод мяча со своей половины.<br>• <b>3 секунды</b> — Пребывание атаки в «краске» соперника."
     },
     "🏐 Волейбол": {
-        "Площадка и сетка": "• **Размеры поля:** 18 × 9 метров.\n• **Высота сетки:** 2.43 м (мужчины) / 2.24 м (женщины).\n• **Состав команды:** 6 игроков на площадке.",
-        "Касания и расстановка": "• **Максимум 3 касания:** Команде разрешено не более 3 касаний для перевода мяча на сторону соперника (блок не считается касанием).\n• **Переход:** Осуществляется **по часовой стрелке** при выигрыше подачи на чужом мяче.\n• **Игрок Либеро:** Защитник в форме другого цвета, не может атаковать и подавать.",
-        "Ограничения и нарушения": "• **Касание сетки:** Запрещено любой частью тела во время игрового действия.\n• **Заступ при подаче:** Нельзя наступать на лицевую линию в момент удара по мячу.\n• **Двойное касание:** Один игрок не может коснуться мяча два раза подряд."
+        "Площадка и сетка": "• Размеры поля: <b>18 × 9 метров</b>.<br>• Высота сетки: <b>2.43 м</b> (мужчины) / <b>2.24 м</b> (женщины).<br>• Состав команды: <b>6 игроков</b>.",
+        "Касания и расстановка": "• Максимум <b>3 касания</b> на команду.<br>• Переход — по часовой стрелке.<br>• Игрок <b>Либеро</b> — защитник без права атаки и подачи."
     },
     "⚽ Футбол": {
-        "Основы игры": "• **Состав:** 11 игроков (включая вратаря).\n• **Продолжительность:** 2 тайма по 45 минут.\n• **Размеры ворот:** 7.32 × 2.44 метра.",
-        "Ввод мяча и правила": "• **Аут:** Вводится двумя руками из-за головы, не отрывая стопы от земли.\n• **Пас вратарю:** Вратарь НЕ имеет права брать мяч в руки после умышленного паса ногой от своего игрока.\n• **Пенальти (11-метровый):** Назначается за фол защитника в своей штрафной площади.",
-        "Вне игры (Офсайд)": "Игрок атаки находится в положении «вне игры», если в момент передачи он ближе к линии ворот соперника, чем мяч и предпоследний игрок обороны."
+        "Основы игры": "• Состав: <b>11 игроков</b> (включая вратаря).<br>• Время: <b>2 тайма по 45 минут</b>.<br>• Ворота: <b>7.32 × 2.44 метра</b>.",
+        "Правила и нарушения": "• Вратарь не берёт мяч в руки после паса ногой от своего.<br>• Аут вводится двумя руками из-за головы."
     },
     "🏃 Легкая атлетика": {
-        "Беговые дисциплины": "• **Спринт (короткие):** До 400 м. Выполняется с **низкого старта** из стартовых колодок.\n• **Стайерский (длинные):** От 3000 м до марафона (42 км 195 м). Выполняется с **высокого старта**.\n• **Эстафета 4х100 м:** Передача палочки строго в 20-метровом коридоре (зоне передачи).",
-        "Прыжки и метания": "• **Прыжок в длину:** Отталкивание строго одной ногой до бруса. Заступ за линию = попытка не засчитана.\n• **Прыжок в высоту:** Самый эффективный стиль — «Фосбери-флоп» (переход планки спиной)."
+        "Беговые дисциплины": "• <b>Спринт (до 400 м)</b>: Низкий старт из колодок.<br>• <b>Стайерские (от 3000 м)</b>: Высокий старт.<br>• <b>Эстафета 4х100 м</b>: Передача палочки в 20-метровом коридоре."
     },
     "🎿 Гимнастика и Лыжи": {
-        "Гимнастика": "• **Безопасность:** Обязательное использование матов и страховки преподавателя/партнера.\n• **Магнезия:** Используется для удаления влаги с ладоней и улучшения сцепления со снарядом.\n• **Терминология:** **Упор** — плечи выше точек опоры; **Вис** — плечи ниже точек опоры.",
-        "Лыжная подготовка": "• **Классический ход:** Попеременный двухшажный ход. Палки подбираются до уровня подмышек/плеч.\n• **Коньковый ход:** Напоминает движение конькобежца. Палки выше — до уровня носа/ушей.\n• **Торможение «Плугом»:** Сведение носков лыж вместе и разведение пяток в стороны."
+        "Гимнастика": "• <b>Магнезия</b> — для удаления влаги с рук.<br>• <b>Упор</b> — плечи выше опоры; <b>Вис</b> — плечи ниже опоры.",
+        "Лыжная подготовка": "• <b>Классический ход</b>: Палки до уровня подмышек.<br>• <b>Торможение «Плугом»</b>: Сведение носков лыж и разведение пяток."
     }
 }
 
-# --- 4. БАЗА ДАННЫХ ТЕСТОВ ---
 DATABASE = {
     "10 класс": {
         "Легкая атлетика": [
             ("Какая дистанция относится к спринтерскому бегу?", ["100 м", "800 м", "1500 м", "5000 м"], "100 м"),
-            ("Как называется старт, используемый в беге на короткие дистанции?", ["Низкий старт", "Высокий старт", "Средний старт", "Произвольный"], "Низкий старт"),
-            ("Сколько этапов входит в эстафетный бег 4х100 м?", ["4", "2", "3", "5"], "4"),
-            ("Какова длина стандартной беговой дорожки на стадионе?", ["400 м", "300 м", "500 м", "200 м"], "400 м"),
-            ("Как передается эстафетная палочка?", ["В определенной зоне (20 м)", "В любой точке", "Только на финише", "По воздуху"], "В определенной зоне (20 м)")
+            ("Как называется старт в беге на короткие дистанции?", ["Низкий старт", "Высокий старт", "Средний старт"], "Низкий старт"),
+            ("Сколько этапов в эстафете 4х100 м?", ["4", "2", "3", "5"], "4")
         ],
-        "Спортивные игры (Баскетбол/Волейбол)": [
-            ("Сколько игроков одной команды находится на площадке в волейболе?", ["6", "5", "11", "7"], "6"),
-            ("Сколько касаний мяча разрешено сделать одной команде в волейболе?", ["3", "2", "4", "Не ограничено"], "3"),
-            ("Сколько очков дается за точный бросок из-за дуги в баскетболе?", ["3", "2", "1", "4"], "3"),
-            ("Высота волейбольной сетки для мужчин составляет:", ["2.43 м", "2.24 м", "2.50 м", "2.35 м"], "2.43 м"),
-            ("Сколько секунд дается команде на атаку в баскетболе?", ["24 сек", "30 сек", "14 сек", "60 сек"], "24 сек")
+        "Спортивные игры": [
+            ("Сколько игроков на площадке в волейболе от одной команды?", ["6", "5", "11", "7"], "6"),
+            ("Сколько очков дается за бросок из-за дуги в баскетболе?", ["3", "2", "1", "4"], "3")
         ]
     },
     "11 класс": {
-        "Гимнастика и Лыжная подготовка": [
-            ("Какой ход в лыжной подготовке является классическим?", ["Попеременный двухшажный", "Коньковый одновременный", "Свободный", "Полуконьковый"], "Попеременный двухшажный"),
-            ("Как называется подъем на лыжах 'елочкой'?", ["Подъем наискось с разведением носков лыж", "Прямой бег", "Боковой шаг", "Подъем боком"], "Подъем наискось с разведением носков лыж"),
-            ("Торможение 'плугом' на лыжах выполняется:", ["Сведением носков лыж и разведением пяток", "Поворотом палок", "Падением на бок", "Разведением носков лыж"], "Сведением носков лыж и разведением пяток"),
-            ("Длина лыжных палок для классического хода должна быть:", ["До уровня плеч/подмышек", "Выше головы", "До пояса", "Произвольной"], "До уровня плеч/подмышек"),
-            ("Орудие страховки при выполнении гимнастических упражнений — это:", ["Учитель/партнер и гимнастический мат", "Сетка", "Ремень безопасности", "Батут"], "Учитель/партнер и гимнастический мат")
+        "Гимнастика и Лыжи": [
+            ("Какой ход в лыжах является классическим?", ["Попеременный двухшажный", "Коньковый", "Свободный"], "Попеременный двухшажный"),
+            ("Торможение 'плугом' выполняется:", ["Сведением носков и разведением пяток", "Поворотом палок", "Падением"], "Сведением носков и разведением пяток")
         ]
     }
 }
 
-# --- 5. ИНИЦИАЛИЗА SESSION STATE ---
+# --- 4. СОСТОЯНИЕ (SESSION STATE) ---
 if "app_mode" not in st.session_state:
-    st.session_state.app_mode = "guide"  # По умолчанию открываем справочник
+    st.session_state.app_mode = "guide"
 if "test_state" not in st.session_state:
     st.session_state.test_state = "login"
 if "selected_class" not in st.session_state:
@@ -174,7 +216,6 @@ if "selected_class" not in st.session_state:
 if "name" not in st.session_state:
     st.session_state.name = ""
 
-# --- 6. ФУНКЦИЯ СОХРАНЕНИЯ РЕЗУЛЬТАТОВ ---
 def save_results(name, user_class, theme, score, total):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     new_data = pd.DataFrame([{
@@ -191,10 +232,13 @@ def save_results(name, user_class, theme, score, total):
     else:
         new_data.to_csv(RESULTS_FILE, mode='w', header=True, index=False, encoding='utf-8-sig')
 
-# --- ШАПКА ПРИЛОЖЕНИЯ И ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ ---
-st.markdown("<h4 style='text-align: center; color: #dcdcdc; margin: 0;'>Преподаватель по Физической культуре</h4>", unsafe_allow_html=True)
-st.markdown("<h3 style='text-align: center; color: #ffffff; margin: 0;'>Семенков Денис Алексеевич</h3>", unsafe_allow_html=True)
-st.markdown("<h2 style='text-align: center; color: white; text-transform: uppercase;'>⚽ ИНТЕРАКТИВНЫЙ СПРАВОЧНИК И ТЕСТЫ</h2>", unsafe_allow_html=True)
+# --- 5. ВЕРХНЯЯ ШАПКА ---
+st.markdown("""
+    <div class="teacher-badge">
+        <div class="teacher-title">Преподаватель физической культуры</div>
+        <div class="teacher-name">Семенков Денис Алексеевич</div>
+    </div>
+""", unsafe_allow_html=True)
 
 col_mode1, col_mode2 = st.columns(2)
 if col_mode1.button("📚 Справочник правил", use_container_width=True):
@@ -204,41 +248,33 @@ if col_mode2.button("📝 Пройти тест", use_container_width=True):
     st.session_state.app_mode = "test"
     st.rerun()
 
-st.markdown("---")
+st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
 
-# ==========================================
-# 📖 РЕЖИМ 1: СПРАВОЧНИК ПРАВИЛ
-# ==========================================
+# --- 6. РЕЖИМ: СПРАВОЧНИК ---
 if st.session_state.app_mode == "guide":
-    st.subheader("📚 Познавательный справочник по правилам")
-    
+    st.markdown("<h3 style='color: #ffffff; text-align: center; margin-bottom: 20px;'>📚 База знаний и правил</h3>", unsafe_allow_html=True)
     sport_choice = st.radio("Выберите дисциплину:", list(RULES_DB.keys()), horizontal=True)
 
     if sport_choice:
-        st.markdown(f"### Разбор правил: {sport_choice}")
+        st.markdown(f"<h4 style='color: #93c5fd; margin-top: 15px; margin-bottom: 15px;'>{sport_choice}</h4>", unsafe_allow_html=True)
         sport_data = RULES_DB[sport_choice]
-        
         for section_title, section_text in sport_data.items():
-            formatted_text = section_text.replace('\n', '<br>')
             st.markdown(f"""
                 <div class="rule-card">
                     <div class="rule-title">📌 {section_title}</div>
-                    <div class="rule-content">{formatted_text}</div>
+                    <div class="rule-content">{section_text}</div>
                 </div>
             """, unsafe_allow_html=True)
 
-# ==========================================
-# 📝 РЕЖИМ 2: ТЕСТИРОВАНИЕ
-# ==========================================
+# --- 7. РЕЖИМ: ТЕСТЫ ---
 elif st.session_state.app_mode == "test":
-    
-    # --- ЭКРАН ВХОДА ---
     if st.session_state.test_state == "login":
+        st.markdown("<h3 style='color: #ffffff; text-align: center;'>📝 Авторизация для тестирования</h3>", unsafe_allow_html=True)
         name = st.text_input("Фамилия и Имя ученика:", value=st.session_state.name)
         st.session_state.name = name
         
-        st.write("### Выберите класс:")
-        c1, col_empty, c2 = st.columns([2, 0.5, 2])
+        st.write("#### Выберите ваш класс:")
+        c1, c2 = st.columns(2)
         if c1.button("10 КЛАСС 📘", use_container_width=True):
             st.session_state.selected_class = "10 класс"
         if c2.button("11 КЛАСС 📕", use_container_width=True):
@@ -247,50 +283,40 @@ elif st.session_state.app_mode == "test":
         if st.session_state.selected_class:
             st.info(f"Выбран: {st.session_state.selected_class}")
             themes = DATABASE.get(st.session_state.selected_class, {})
-            
-            if not themes:
-                st.error(f"⚠️ Темы для {st.session_state.selected_class} не найдены!")
-            else:
-                for theme_name in themes.keys():
-                    if st.button(theme_name, use_container_width=True):
-                        if name.strip():
-                            st.session_state.u_class = st.session_state.selected_class
-                            st.session_state.theme = theme_name
-                            st.session_state.start_time = datetime.now()
-                            st.session_state.results_saved = False
-                            
-                            raw_q = themes[theme_name]
-                            num_to_select = min(len(raw_q), QUESTIONS_LIMIT)
-                            selected_raw = random.sample(raw_q, num_to_select)
-                            
-                            shuffled = []
-                            for q_text, opts, corr in selected_raw:
-                                sh_opts = random.sample(opts, len(opts))
-                                shuffled.append((q_text, sh_opts, corr))
-                            
-                            st.session_state.questions = shuffled
-                            st.session_state.user_answers = {}
-                            st.session_state.test_state = "testing"
-                            st.rerun()
-                        else:
-                            st.error("⚠️ Сначала введите Фамилию и Имя!")
+            st.write("#### Выберите тему для проверки знаний:")
+            for theme_name in themes.keys():
+                if st.button(f"🎯 {theme_name}", use_container_width=True):
+                    if name.strip():
+                        st.session_state.u_class = st.session_state.selected_class
+                        st.session_state.theme = theme_name
+                        st.session_state.start_time = datetime.now()
+                        st.session_state.results_saved = False
+                        
+                        raw_q = themes[theme_name]
+                        selected_raw = random.sample(raw_q, min(len(raw_q), QUESTIONS_LIMIT))
+                        shuffled = [(q, random.sample(opts, len(opts)), corr) for q, opts, corr in selected_raw]
+                        
+                        st.session_state.questions = shuffled
+                        st.session_state.user_answers = {}
+                        st.session_state.test_state = "testing"
+                        st.rerun()
+                    else:
+                        st.error("⚠️ Сначала введите Фамилию и Имя!")
 
-        st.markdown("---")
-        with st.expander("🔑 Вход для преподавателя"):
-            pin = st.text_input("Введите PIN-код:", type="password")
+        st.markdown("<div style='margin-top: 30px;'></div>", unsafe_allow_html=True)
+        with st.expander("🔑 Панель преподавателя (Просмотр результатов)"):
+            pin = st.text_input("Введите PIN-код доступа:", type="password")
             if pin == TEACHER_PIN:
-                st.success("Авторизовано!")
+                st.success("Доступ разрешен!")
                 if os.path.exists(RESULTS_FILE):
                     df = pd.read_csv(RESULTS_FILE)
-                    st.dataframe(df)
-                    st.download_button("Скачать результаты (CSV)", data=df.to_csv(index=False).encode('utf-8-sig'), file_name="results.csv", mime="text/csv")
+                    st.dataframe(df, use_container_width=True)
+                    st.download_button("📥 Скачать журнал (CSV)", data=df.to_csv(index=False).encode('utf-8-sig'), file_name="results.csv", mime="text/csv")
                 else:
-                    st.info("Результатов пока нет.")
+                    st.info("Журнал пока пуст.")
 
-    # --- ЭКРАН ТЕСТИРОВАНИЯ ---
     elif st.session_state.test_state == "testing":
         st_autorefresh(interval=1000, key="timer_counter")
-        
         elapsed = datetime.now() - st.session_state.start_time
         remaining = timedelta(minutes=TEST_DURATION_MIN) - elapsed
         
@@ -299,62 +325,42 @@ elif st.session_state.app_mode == "test":
             st.rerun()
 
         mins, secs = divmod(int(remaining.total_seconds()), 60)
-        
         st.markdown(f"""
-        <div class='fixed-header'>
-            <h3 style='margin:0; color:white; text-align:center;'>⏱️ Осталось времени: {mins:02d}:{secs:02d}</h3>
-            <p style='margin:0; color:#dcdcdc; text-align:center;'>Ученик: <b>{st.session_state.name}</b> | {st.session_state.u_class}</p>
+        <div class="timer-card">
+            <div class="timer-text">⏱️ Осталось времени: {mins:02d}:{secs:02d}</div>
+            <div class="timer-sub">Ученик: <b>{st.session_state.name}</b> | Класс: <b>{st.session_state.u_class}</b></div>
         </div>
         """, unsafe_allow_html=True)
 
         with st.form("test_form"):
-            st.write(f"### Тема: {st.session_state.theme}")
-            
+            st.markdown(f"<h4 style='color: #60a5fa;'>Тема: {st.session_state.theme}</h4>", unsafe_allow_html=True)
             for idx, (q_text, opts, corr) in enumerate(st.session_state.questions):
                 st.markdown(f"**Вопрос {idx + 1}:** {q_text}")
-                st.session_state.user_answers[idx] = st.radio(
-                    f"Ответ на вопрос {idx + 1}", 
-                    opts, 
-                    key=f"q_{idx}", 
-                    label_visibility="collapsed"
-                )
-                st.markdown("---")
-                
-            submit = st.form_submit_button("Завершить тест", use_container_width=True)
-            if submit:
+                st.session_state.user_answers[idx] = st.radio(f"Ответ {idx + 1}", opts, key=f"q_{idx}", label_visibility="collapsed")
+                st.markdown("<hr style='border: 0.5px solid rgba(255,255,255,0.05);'>", unsafe_allow_html=True)
+            if st.form_submit_button("Завершить тест и отправь результат", use_container_width=True):
                 st.session_state.test_state = "results"
                 st.rerun()
 
-    # --- ЭКРАН РЕЗУЛЬТАТОВ ---
     elif st.session_state.test_state == "results":
         st.balloons()
-        st.title("🏆 Тест завершен!")
-        
-        score = 0
+        st.markdown("<h2 style='text-align: center; color: #4ade80;'>🏆 Тестирование завершено!</h2>", unsafe_allow_html=True)
+        score = sum(1 for idx, (_, _, corr) in enumerate(st.session_state.questions) if st.session_state.user_answers.get(idx) == corr)
         total = len(st.session_state.questions)
-        
-        for idx, (q_text, opts, corr) in enumerate(st.session_state.questions):
-            user_ans = st.session_state.user_answers.get(idx)
-            if user_ans == corr:
-                score += 1
 
         if not st.session_state.results_saved:
             save_results(st.session_state.name, st.session_state.u_class, st.session_state.theme, score, total)
             st.session_state.results_saved = True
 
         percent = round((score / total) * 100, 1)
-        st.header(f"Ваш результат: {score} из {total} ({percent}%)")
+        st.markdown(f"""
+            <div style="background: rgba(30, 41, 59, 0.7); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px;">
+                <h3 style="color: #ffffff; margin: 0;">Ваш результат: <span style="color: #60a5fa;">{score}</span> из {total}</h3>
+                <h4 style="color: #94a3b8; margin-top: 8px;">Процент выполнения: {percent}%</h4>
+            </div>
+        """, unsafe_allow_html=True)
 
-        if percent >= 85:
-            st.success("Отлично! Оценка: 5 🥇")
-        elif percent >= 70:
-            st.info("Хорошо! Оценка: 4 🥈")
-        elif percent >= 50:
-            st.warning("Удовлетворительно! Оценка: 3 🥉")
-        else:
-            st.error("Неудовлетворительно! Оценка: 2 ❌")
-
-        if st.button("Пройти снова", use_container_width=True):
+        if st.button("Пройти снова или выбрать другой раздел", use_container_width=True):
             st.session_state.test_state = "login"
             st.session_state.selected_class = None
             st.rerun()
