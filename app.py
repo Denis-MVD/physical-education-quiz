@@ -2,11 +2,12 @@ import base64
 from datetime import datetime, timedelta
 import os
 import random
+import time
 import pandas as pd
 import streamlit as st
 from streamlit_autorefresh import st_autorefresh
 
-# --- 1. ВСПУМОГАТЕЛЬНЫЕ ФУНКЦИИ И СТИЛИЗАЦИЯ ---
+# --- 1. ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ И СТИЛИЗАЦИЯ ---
 def get_base64_of_bin_file(bin_file):
     if os.path.exists(bin_file):
         with open(bin_file, "rb") as f:
@@ -20,13 +21,13 @@ def apply_custom_design(bin_file):
 
     css = f"""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Press+Start+2P&display=swap');
 
     html, body, [class*="css"] {{
         font-family: 'Inter', sans-serif;
     }}
 
-    /* 1. Общий фон страницы */
+    /* Общий фон страницы */
     .stApp {{
         {bg_style}
         background-size: cover;
@@ -37,28 +38,27 @@ def apply_custom_design(bin_file):
     /* Скрытие стандартных элементов Streamlit */
     #MainMenu, footer, header {{visibility: hidden;}}
 
-    /* 2. Главная карточка-контейнер (Glassmorphism) */
+    /* Главная карточка-контейнер (Glassmorphism) */
     .stMainBlockContainer {{
-        background: rgba(15, 23, 42, 0.88) !important;
+        background: rgba(15, 23, 42, 0.90) !important;
         backdrop-filter: blur(16px) saturate(180%);
         -webkit-backdrop-filter: blur(16px) saturate(180%);
-        padding: 40px 35px !important;
+        padding: 35px 30px !important;
         border-radius: 24px !important;
         border: 1px solid rgba(255, 255, 255, 0.12) !important;
         box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(59, 130, 246, 0.15) !important;
-        margin-top: 30px !important;
-        margin-bottom: 30px !important;
+        margin-top: 25px !important;
+        margin-bottom: 25px !important;
     }}
 
-    /* 3. Шапка учителя */
+    /* Шапка учителя */
     .teacher-badge {{
         background: linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%);
         border: 1px solid rgba(59, 130, 246, 0.3);
         border-radius: 16px;
         padding: 16px 20px;
         text-align: center;
-        margin-bottom: 25px;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        margin-bottom: 20px;
     }}
     .teacher-title {{
         color: #94a3b8;
@@ -77,7 +77,55 @@ def apply_custom_design(bin_file):
         -webkit-text-fill-color: transparent;
     }}
 
-    /* 4. Карточки справочника правил */
+    /* Карточки игрового квиза */
+    .game-card {{
+        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+        border: 2px solid rgba(59, 130, 246, 0.4);
+        border-radius: 20px;
+        padding: 25px;
+        text-align: center;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }}
+    .game-score-badge {{
+        background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        font-weight: 800;
+        padding: 8px 18px;
+        border-radius: 20px;
+        display: inline-block;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+    }}
+    .game-question {{
+        color: #ffffff;
+        font-size: 1.35rem;
+        font-weight: 700;
+        margin-bottom: 20px;
+        line-height: 1.4;
+    }}
+
+    /* Игровая инфографика результатов */
+    .stat-box {{
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 15px;
+        text-align: center;
+    }}
+    .stat-number {{
+        font-size: 2rem;
+        font-weight: 800;
+        color: #60a5fa;
+    }}
+    .stat-label {{
+        color: #94a3b8;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+    }}
+
+    /* Карточки правил */
     .rule-card {{
         background: rgba(30, 41, 59, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.08);
@@ -85,22 +133,12 @@ def apply_custom_design(bin_file):
         border-radius: 14px;
         padding: 18px 22px;
         margin-bottom: 16px;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }}
-    .rule-card:hover {{
-        background: rgba(30, 41, 59, 0.8);
-        border-left-color: #60a5fa;
-        transform: translateX(4px);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
     }}
     .rule-title {{
         color: #60a5fa;
         font-weight: 700;
         font-size: 1.1rem;
         margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
     }}
     .rule-content {{
         color: #e2e8f0;
@@ -108,17 +146,15 @@ def apply_custom_design(bin_file):
         line-height: 1.6;
     }}
 
-    /* 5. Кастомизация кнопок Streamlit */
+    /* Стилизация кнопок */
     .stButton > button {{
         background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
         color: #f8fafc !important;
         border-radius: 12px !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        padding: 12px 24px !important;
+        padding: 12px 20px !important;
         font-weight: 600 !important;
-        letter-spacing: 0.3px !important;
         transition: all 0.25s ease !important;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
     }}
     .stButton > button:hover {{
         background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
@@ -126,28 +162,6 @@ def apply_custom_design(bin_file):
         color: #ffffff !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4) !important;
-    }}
-
-    /* 6. Кастомизация плашки таймера */
-    .timer-card {{
-        background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%);
-        border: 1px solid rgba(99, 102, 241, 0.4);
-        border-radius: 16px;
-        padding: 16px;
-        text-align: center;
-        margin-bottom: 24px;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
-    }}
-    .timer-text {{
-        color: #818cf8;
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin: 0;
-    }}
-    .timer-sub {{
-        color: #94a3b8;
-        font-size: 0.9rem;
-        margin-top: 4px;
     }}
     </style>
     """
@@ -206,6 +220,15 @@ DATABASE = {
     }
 }
 
+# --- ВОПРОСЫ ДЛЯ ИГРОВОГО КВИЗА (ИНТЕРЕСНЫЕ ФАКТЫ И ИГРА) ---
+GAME_QUESTIONS = [
+    {"q": "🏀 Сколько секунд дается баскетбольной команде на проведение атаки?", "options": ["24 сек", "30 сек", "15 сек", "10 сек"], "ans": "24 сек", "fact": "Правило 24 секунд было введено в 1954 году, чтобы сделать игру динамичнее!"},
+    {"q": "⚽ Какая ширина ворот в классическом футболе?", "options": ["7.32 м", "6.00 м", "8.00 м", "5.50 м"], "ans": "7.32 м", "fact": "Размер ворот исторически равен 8 ярдам (7.32 м)."},
+    {"q": "🏐 Сколько максимальных касаний мяча разрешено сделать одной команде в волейболе?", "options": ["3 касания", "2 касания", "4 касания", "Без ограничений"], "ans": "3 касания", "fact": "Блок при этом не считается за обычное касание мяча!"},
+    {"q": "🏃 С какого старта выполняются беговые дисциплины на короткие дистанции (спринт)?", "options": ["Низкий старт", "Высокий старт", "Старт с ходу", "Произвольный старт"], "ans": "Низкий старт", "fact": "Низкий старт из колодок позволяет развить максимальное ускорение."},
+    {"q": "🎿 Какое специальное средство используют гимнасты для уменьшения скольжения рук?", "options": ["Магнезия", "Тальк", "Мел", "Канифоль"], "ans": "Магнезия", "fact": "Магнезия отлично впитывает влагу и обеспечивает крепкий хват."}
+]
+
 # --- 4. СОСТОЯНИЕ (SESSION STATE) ---
 if "app_mode" not in st.session_state:
     st.session_state.app_mode = "guide"
@@ -215,6 +238,16 @@ if "selected_class" not in st.session_state:
     st.session_state.selected_class = None
 if "name" not in st.session_state:
     st.session_state.name = ""
+
+# Состояние для развлекательной игры
+if "game_step" not in st.session_state:
+    st.session_state.game_step = 0
+if "game_score" not in st.session_state:
+    st.session_state.game_score = 0
+if "game_combo" not in st.session_state:
+    st.session_state.game_combo = 0
+if "game_finished" not in st.session_state:
+    st.session_state.game_finished = False
 
 def save_results(name, user_class, theme, score, total):
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -240,12 +273,19 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-col_mode1, col_mode2 = st.columns(2)
-if col_mode1.button("📚 Справочник правил", use_container_width=True):
+col_mode1, col_mode2, col_mode3 = st.columns(3)
+if col_mode1.button("📚 Справочник", use_container_width=True):
     st.session_state.app_mode = "guide"
     st.rerun()
 if col_mode2.button("📝 Пройти тест", use_container_width=True):
     st.session_state.app_mode = "test"
+    st.rerun()
+if col_mode3.button("🎮 Квиз-Игра", use_container_width=True):
+    st.session_state.app_mode = "game"
+    st.session_state.game_step = 0
+    st.session_state.game_score = 0
+    st.session_state.game_combo = 0
+    st.session_state.game_finished = False
     st.rerun()
 
 st.markdown("<div style='margin-bottom: 25px;'></div>", unsafe_allow_html=True)
@@ -266,7 +306,97 @@ if st.session_state.app_mode == "guide":
                 </div>
             """, unsafe_allow_html=True)
 
-# --- 7. РЕЖИМ: ТЕСТЫ ---
+# --- 7. РЕЖИМ: ИНТЕРАКТИВНАЯ КВИЗ-ИГРА ---
+elif st.session_state.app_mode == "game":
+    st.markdown("<h3 style='color: #ffffff; text-align: center;'>⚡ Спортивный Блиц-Квиз</h3>", unsafe_allow_html=True)
+    
+    if not st.session_state.game_finished:
+        curr_q = GAME_QUESTIONS[st.session_state.game_step]
+        total_q = len(GAME_QUESTIONS)
+        
+        # Индикатор прогресса
+        progress = (st.session_state.game_step + 1) / total_q
+        st.progress(progress)
+        
+        st.markdown(f"""
+        <div class="game-card">
+            <div class="game-score-badge">🔥 Очки: {st.session_state.game_score} | Комбо: x{st.session_state.game_combo + 1}</div>
+            <div style="color: #94a3b8; font-weight:600; margin-bottom: 10px;">Вопрос {st.session_state.game_step + 1} из {total_q}</div>
+            <div class="game-question">{curr_q['q']}</div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        cols = st.columns(2)
+        for idx, opt in enumerate(curr_q["options"]):
+            col_target = cols[idx % 2]
+            if col_target.button(opt, key=f"g_opt_{idx}", use_container_width=True):
+                if opt == curr_q["ans"]:
+                    st.session_state.game_combo += 1
+                    gained_pts = 100 * st.session_state.game_combo
+                    st.session_state.game_score += gained_pts
+                    st.toast(f"🎉 Верно! +{gained_pts} очков!", icon="✅")
+                else:
+                    st.session_state.game_combo = 0
+                    st.toast(f"❌ Ошибка! Это была неверная ставка.", icon="⚠️")
+                
+                # Показ факта
+                st.info(f"💡 **ФАКТ:** {curr_q['fact']}")
+                time.sleep(1.2)
+                
+                if st.session_state.game_step + 1 < total_q:
+                    st.session_state.game_step += 1
+                else:
+                    st.session_state.game_finished = True
+                st.rerun()
+
+    else:
+        st.balloons()
+        score = st.session_state.game_score
+        
+        # Определение ранга
+        if score >= 1000:
+            rank = "🏆 ОЛИМПИЙСКИЙ ЧЕМПИОН"
+            color = "#f59e0b"
+        elif score >= 500:
+            rank = "🥇 МАСТЕР СПОРТА"
+            color = "#3b82f6"
+        else:
+            rank = "🏃 ЛЮБИТЕЛЬ СПОРТА"
+            color = "#10b981"
+
+        st.markdown(f"""
+        <div class="game-card" style="border-color: {color};">
+            <h2 style="color: {color}; margin: 0;">{rank}</h2>
+            <p style="color: #cbd5e1; margin-top: 5px;">Поздравляем с прохождением квиза!</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Визуальная инфографика
+        i1, i2 = st.columns(2)
+        with i1:
+            st.markdown(f"""
+            <div class="stat-box">
+                <div class="stat-number">{score}</div>
+                <div class="stat-label">Набрано очков</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with i2:
+            st.markdown(f"""
+            <div class="stat-box">
+                <div class="stat-number">{len(GAME_QUESTIONS)}</div>
+                <div class="stat-label">Пройдено вопросов</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown("<div style='margin-top: 20px;'></div>", unsafe_allow_html=True)
+        if st.button("🔄 Сыграть снова", use_container_width=True):
+            st.session_state.game_step = 0
+            st.session_state.game_score = 0
+            st.session_state.game_combo = 0
+            st.session_state.game_finished = False
+            st.rerun()
+
+# --- 8. РЕЖИМ: ТЕСТЫ ---
 elif st.session_state.app_mode == "test":
     if st.session_state.test_state == "login":
         st.markdown("<h3 style='color: #ffffff; text-align: center;'>📝 Авторизация для тестирования</h3>", unsafe_allow_html=True)
@@ -326,9 +456,9 @@ elif st.session_state.app_mode == "test":
 
         mins, secs = divmod(int(remaining.total_seconds()), 60)
         st.markdown(f"""
-        <div class="timer-card">
-            <div class="timer-text">⏱️ Осталось времени: {mins:02d}:{secs:02d}</div>
-            <div class="timer-sub">Ученик: <b>{st.session_state.name}</b> | Класс: <b>{st.session_state.u_class}</b></div>
+        <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 1px solid rgba(99, 102, 241, 0.4); border-radius: 16px; padding: 16px; text-align: center; margin-bottom: 24px;">
+            <div style="color: #818cf8; font-size: 1.4rem; font-weight: 700;">⏱️ Осталось времени: {mins:02d}:{secs:02d}</div>
+            <div style="color: #94a3b8; font-size: 0.9rem; margin-top: 4px;">Ученик: <b>{st.session_state.name}</b> | Класс: <b>{st.session_state.u_class}</b></div>
         </div>
         """, unsafe_allow_html=True)
 
@@ -338,7 +468,7 @@ elif st.session_state.app_mode == "test":
                 st.markdown(f"**Вопрос {idx + 1}:** {q_text}")
                 st.session_state.user_answers[idx] = st.radio(f"Ответ {idx + 1}", opts, key=f"q_{idx}", label_visibility="collapsed")
                 st.markdown("<hr style='border: 0.5px solid rgba(255,255,255,0.05);'>", unsafe_allow_html=True)
-            if st.form_submit_button("Завершить тест и отправь результат", use_container_width=True):
+            if st.form_submit_button("Завершить тест и отправить результат", use_container_width=True):
                 st.session_state.test_state = "results"
                 st.rerun()
 
